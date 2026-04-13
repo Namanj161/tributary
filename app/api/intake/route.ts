@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractContent } from '@/lib/extractors';
-import { deconstructContent } from '@/lib/claude';
+import { deconstructContent, discoverConnections } from '@/lib/claude';
 import { supabase } from '@/lib/supabase';
 
-export const maxDuration = 60; // Allow up to 60s for long transcripts
+export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,11 +14,8 @@ export async function POST(request: NextRequest) {
     }
 
     const trimmedInput = input.trim();
-
-    // Step 1: Extract content from the source
     const extracted = await extractContent(trimmedInput);
 
-    // Step 2: Store the source record
     const { data: source, error: sourceError } = await supabase
       .from('sources')
       .insert({
@@ -38,7 +35,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to save source' }, { status: 500 });
     }
 
-    // Step 3: Deconstruct content into knowledge units via Claude
     const deconstructedUnits = await deconstructContent(
       extracted.title,
       extracted.text,
@@ -50,17 +46,11 @@ export async function POST(request: NextRequest) {
         source,
         knowledge_units: [],
         connections: [],
-        stats: {
-          total_units: 0,
-          total_sources: 0,
-          units_added: 0,
-          connections_found: 0,
-        },
-        warning: 'No knowledge units were extracted. The content may be too short or unstructured.',
+        stats: { total_units: 0, total_sources: 0, units_added: 0, connections_found: 0 },
+        warning: 'No knowledge units were extracted.',
       });
     }
 
-    // Step 4: Store knowledge units
     const unitsToInsert = deconstructedUnits.map((unit) => ({
       source_id: source.id,
       type: unit.type,
@@ -79,38 +69,70 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to save knowledge units' }, { status: 500 });
     }
 
-    // Step 5: Update source with unit count
     await supabase
       .from('sources')
       .update({ knowledge_unit_count: knowledgeUnits.length })
       .eq('id', source.id);
 
-    // Step 6: Get total stats
-    const { count: totalUnits } = await supabase
-      .from('knowledge_units')
-      .select('*', { count: 'exact', head: true });
+    let connectionsFound: any[] = [];
+    try {
+      const { data: existingUnits } = await supabase
+        .from('knowledge_units')
+        .select('id, type, content, tags')
+        .not('source_id', 'eq', source.id)
+        .order('created_at', { ascending: false })
+        .limit(200);
 
-    const { count: totalSources } = await supabase
-      .from('sources')
-      .select('*', { count: 'exact', head: true });
+      if (existingUnits && existingUnits.length > 0) {
+        const rawConnections = await discoverConnections(knowledgeUnits, existingUnits);
 
-    // Return the intake brief
+        if (rawConnections.length > 0) {
+          const connectionsToInsert = rawConnections
+            .map((c) => {
+              const idx = parseInt(c.source_unit_id.replace('new_', ''));
+              if (isNaN(idx) || idx >= knowledgeUnits.length) return null;
+              return {
+                source_unit_id: knowledgeUnits[idx].id,
+                target_unit_id: c.target_unit_id,
+                relationship: c.relationship,
+                note: c.note,
+              };
+            })
+            .filter(Boolean);
+
+          if (connectionsToInsert.length > 0) {
+            const { data: insertedConnections, error: connError } = await supabase
+              .from('connections')
+              .insert(connectionsToInsert)
+              .select('*, source_unit:knowledge_units!connections_source_unit_id_fkey(id, type, content, tags), target_unit:knowledge_units!connections_target_unit_id_fkey(id, type, content, tags)');
+
+            if (!connError) connectionsFound = insertedConnections || [];
+            else console.error('Connection insert error:', connError);
+          }
+        }
+      }
+    } catch (connErr) {
+      console.error('Connection discovery error (non-fatal):', connErr);
+    }
+
+    const { count: totalUnits } = await supabase.from('knowledge_units').select('*', { count: 'exact', head: true });
+    const { count: totalSources } = await supabase.from('sources').select('*', { count: 'exact', head: true });
+    const { count: totalConnections } = await supabase.from('connections').select('*', { count: 'exact', head: true });
+
     return NextResponse.json({
       source: { ...source, knowledge_unit_count: knowledgeUnits.length },
       knowledge_units: knowledgeUnits,
-      connections: [], // Phase 1: connection discovery
+      connections: connectionsFound,
       stats: {
         total_units: totalUnits || 0,
         total_sources: totalSources || 0,
         units_added: knowledgeUnits.length,
-        connections_found: 0,
+        connections_found: connectionsFound.length,
+        total_connections: totalConnections || 0,
       },
     });
   } catch (err: any) {
     console.error('Intake error:', err);
-    return NextResponse.json(
-      { error: err.message || 'An unexpected error occurred' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: err.message || 'An unexpected error occurred' }, { status: 500 });
   }
 }

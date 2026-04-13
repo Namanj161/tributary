@@ -30,7 +30,6 @@ export interface KnowledgeUnit {
   context: string | null;
   tags: string[];
   created_at: string;
-  // Joined fields
   source?: Source;
   connections?: Connection[];
 }
@@ -42,7 +41,6 @@ export interface Connection {
   relationship: ConnectionType;
   note: string | null;
   created_at: string;
-  // Joined fields
   target_unit?: KnowledgeUnit;
   source_unit?: KnowledgeUnit;
 }
@@ -56,6 +54,28 @@ export interface IntakeBrief {
     total_sources: number;
     units_added: number;
     connections_found: number;
+    total_connections?: number;
+  };
+}
+
+export interface BulkResult {
+  input: string;
+  status: 'success' | 'error';
+  title?: string;
+  units_added?: number;
+  error?: string;
+}
+
+export interface BulkBrief {
+  results: BulkResult[];
+  connections_found: number;
+  stats: {
+    total_units: number;
+    total_sources: number;
+    total_connections: number;
+    sources_processed: number;
+    sources_failed: number;
+    units_added: number;
   };
 }
 

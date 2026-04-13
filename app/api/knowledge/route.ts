@@ -15,17 +15,9 @@ export async function GET(request: NextRequest) {
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
-  if (type) {
-    query = query.eq('type', type);
-  }
-
-  if (tag) {
-    query = query.contains('tags', [tag]);
-  }
-
-  if (search) {
-    query = query.ilike('content', `%${search}%`);
-  }
+  if (type) query = query.eq('type', type);
+  if (tag) query = query.contains('tags', [tag]);
+  if (search) query = query.ilike('content', `%${search}%`);
 
   const { data: units, error } = await query;
 
@@ -34,29 +26,43 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to query knowledge base' }, { status: 500 });
   }
 
-  // Get aggregate stats
-  const { count: totalUnits } = await supabase
-    .from('knowledge_units')
-    .select('*', { count: 'exact', head: true });
+  const unitIds = (units || []).map(u => u.id);
+  let connectionMap: Record<string, any[]> = {};
 
-  const { count: totalSources } = await supabase
-    .from('sources')
-    .select('*', { count: 'exact', head: true });
+  if (unitIds.length > 0) {
+    const { data: outgoing } = await supabase
+      .from('connections')
+      .select('*, target_unit:knowledge_units!connections_target_unit_id_fkey(id, type, content, tags)')
+      .in('source_unit_id', unitIds);
 
-  // Get all unique tags for filtering
-  const { data: allUnits } = await supabase
-    .from('knowledge_units')
-    .select('tags');
+    const { data: incoming } = await supabase
+      .from('connections')
+      .select('*, source_unit:knowledge_units!connections_source_unit_id_fkey(id, type, content, tags)')
+      .in('target_unit_id', unitIds);
 
+    for (const conn of outgoing || []) {
+      if (!connectionMap[conn.source_unit_id]) connectionMap[conn.source_unit_id] = [];
+      connectionMap[conn.source_unit_id].push({ ...conn, direction: 'outgoing', connected_unit: conn.target_unit });
+    }
+    for (const conn of incoming || []) {
+      if (!connectionMap[conn.target_unit_id]) connectionMap[conn.target_unit_id] = [];
+      connectionMap[conn.target_unit_id].push({ ...conn, direction: 'incoming', connected_unit: conn.source_unit });
+    }
+  }
+
+  const unitsWithConnections = (units || []).map(u => ({ ...u, connections: connectionMap[u.id] || [] }));
+
+  const { count: totalUnits } = await supabase.from('knowledge_units').select('*', { count: 'exact', head: true });
+  const { count: totalSources } = await supabase.from('sources').select('*', { count: 'exact', head: true });
+  const { count: totalConnections } = await supabase.from('connections').select('*', { count: 'exact', head: true });
+
+  const { data: allUnits } = await supabase.from('knowledge_units').select('tags');
   const allTags = new Set<string>();
   allUnits?.forEach((u) => u.tags?.forEach((t: string) => allTags.add(t)));
 
   return NextResponse.json({
-    units,
-    stats: {
-      total_units: totalUnits || 0,
-      total_sources: totalSources || 0,
-    },
+    units: unitsWithConnections,
+    stats: { total_units: totalUnits || 0, total_sources: totalSources || 0, total_connections: totalConnections || 0 },
     available_tags: Array.from(allTags).sort(),
   });
 }
