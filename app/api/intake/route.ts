@@ -124,6 +124,22 @@ export async function POST(request: NextRequest) {
       console.error('Relevance scoring error (non-fatal):', relErr);
     }
 
+    // Step 8: Persist actions from relevance scoring
+    if (relevance?.actions?.length > 0) {
+      try {
+        const actionsToInsert = relevance.actions.map((a: any) => ({
+          source_id: source.id,
+          action: a.action,
+          urgency: ['now','this_week','when_relevant'].includes(a.urgency) ? a.urgency : 'when_relevant',
+          based_on: a.based_on || null,
+          status: 'pending',
+        }));
+        await supabase.from('actions').insert(actionsToInsert);
+      } catch (actErr) {
+        console.error('Action persist error (non-fatal):', actErr);
+      }
+    }
+
     const { count: totalUnits } = await supabase.from('knowledge_units').select('*', { count: 'exact', head: true });
     const { count: totalSources } = await supabase.from('sources').select('*', { count: 'exact', head: true });
     const { count: totalConnections } = await supabase.from('connections').select('*', { count: 'exact', head: true });
