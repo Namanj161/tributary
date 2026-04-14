@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TPIC — Tributary Personal Intelligence Compiler
 
-## Getting Started
+A personal knowledge management system that extracts atomic knowledge units from any content you consume, discovers connections between ideas, compiles an evolving wiki, and lets you query your entire knowledge base.
 
-First, run the development server:
+Built with Next.js, Supabase, and Cerebras LLM (llama3.1-8b).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+GitHub: https://github.com/Namanj161/tributary
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## What It Does
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Feed TPIC any content — YouTube videos, tweets, articles, PDFs, Word docs, Notion pages, or raw text. It extracts, deconstructs into atomic knowledge units, discovers connections to existing knowledge, compiles a wiki, and answers questions with citations.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Tech Stack
 
-## Learn More
+Next.js 16.2.3, Supabase (PostgreSQL), Cerebras API (llama3.1-8b), react-force-graph-2d, cheerio, youtube-transcript, pdf-parse, mammoth
 
-To learn more about Next.js, take a look at the following resources:
+## Pages
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Intake (/) — URL, text, bulk import, file upload
+- Knowledge Base (/knowledge) — browse units with search/filter
+- Graph (/graph) — force-directed knowledge graph
+- Query (/query) — ask questions, get cited answers
+- Wiki (/wiki) — auto-compiled articles from unit clusters
+- Profile (/profile) — personal context for relevance scoring
+- Actions (/actions) — action items from relevance scoring
+- Capture (/setup) — browser bookmarklet setup
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Setup
 
-## Deploy on Vercel
+1. Clone: git clone https://github.com/Namanj161/tributary.git && cd tributary && npm install
+2. Create .env.local with NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, CEREBRAS_API_KEY
+3. Run database schema in Supabase SQL Editor (see supabase-schema.sql + wiki/actions/profile tables)
+4. npm run dev → http://localhost:3000
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Pipeline
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Content → Extract Text → LLM Deconstruction → Store Units → Discover Connections → Auto-Compile Wiki
+
+## Version History
+
+v0: Base extraction | v1.0: Connections + bulk | v1.1: All extractors + graph | v1.2: Query | v1.3: Profile + relevance | v1.4: Actions | v1.5: Bookmarklet | v1.6: Wiki compilation | v1.7: Wiki-graph integration + auto-compile
