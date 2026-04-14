@@ -26,7 +26,8 @@ export default function SetupPage() {
           <nav style={{ display: 'flex', gap: 4 }}>
             <Link href="/" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, color: '#8b90a8', textDecoration: 'none' }}>Intake</Link>
             <Link href="/knowledge" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, color: '#8b90a8', textDecoration: 'none' }}>Knowledge Base</Link>
-          </nav>
+          <Link href="/wiki" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Wiki</Link>
+            </nav>
         </div>
       </header>
 

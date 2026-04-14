@@ -48,6 +48,7 @@ export default function ProfilePage() {
             <span style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#f5a623', background: 'rgba(245,166,35,.1)' }}>Profile</span>
           <Link href="/actions" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Actions</Link>
             <Link href="/setup" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Capture</Link>
+            <Link href="/wiki" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Wiki</Link>
             </nav>
         </div>
       </header>

@@ -52,6 +52,7 @@ export default function ActionsPage() {
             <span style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#ff6b6b', background: 'rgba(255,107,107,.1)' }}>Actions</span>
             <Link href="/profile" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, color: '#8b90a8', textDecoration: 'none' }}>Profile</Link>
           <Link href="/setup" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Capture</Link>
+            <Link href="/wiki" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Wiki</Link>
             </nav>
         </div>
       </header>
