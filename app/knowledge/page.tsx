@@ -75,6 +75,7 @@ export default function KnowledgeBase() {
             <span style={{ padding: "6px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, color: "#00e5a0", background: "rgba(0,229,160,0.1)" }}>Knowledge Base</span>
             <Link href="/graph" style={{ padding: "6px 14px", borderRadius: 8, fontSize: 13, color: "#8b90a8", textDecoration: "none" }}>Graph</Link>
           <Link href="/query" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Query</Link>
+            <Link href="/profile" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Profile</Link>
             </nav>
         </div>
       </header>

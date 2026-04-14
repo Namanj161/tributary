@@ -142,6 +142,7 @@ export default function Home() {
             <Link href="/knowledge" style={{ padding: "6px 14px", borderRadius: 8, fontSize: 13, color: "#8b90a8", textDecoration: "none" }}>Knowledge Base</Link>
             <Link href="/graph" style={{ padding: "6px 14px", borderRadius: 8, fontSize: 13, color: "#8b90a8", textDecoration: "none" }}>Graph</Link>
           <Link href="/query" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Query</Link>
+            <Link href="/profile" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Profile</Link>
             </nav>
         </div>
       </header>

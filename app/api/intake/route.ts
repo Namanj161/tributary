@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { extractContent } from '@/lib/extractors';
 import { deconstructContent, discoverConnections } from '@/lib/claude';
 import { supabase } from '@/lib/supabase';
+import { scoreRelevance } from '@/lib/relevance';
 
 export const maxDuration = 60;
 
@@ -115,6 +116,14 @@ export async function POST(request: NextRequest) {
       console.error('Connection discovery error (non-fatal):', connErr);
     }
 
+    // Step 7: Personal relevance scoring
+    let relevance = null;
+    try {
+      relevance = await scoreRelevance(knowledgeUnits);
+    } catch (relErr) {
+      console.error('Relevance scoring error (non-fatal):', relErr);
+    }
+
     const { count: totalUnits } = await supabase.from('knowledge_units').select('*', { count: 'exact', head: true });
     const { count: totalSources } = await supabase.from('sources').select('*', { count: 'exact', head: true });
     const { count: totalConnections } = await supabase.from('connections').select('*', { count: 'exact', head: true });
@@ -128,6 +137,7 @@ export async function POST(request: NextRequest) {
         total_sources: totalSources || 0,
         units_added: knowledgeUnits.length,
         connections_found: connectionsFound.length,
+      relevance,
         total_connections: totalConnections || 0,
       },
     });

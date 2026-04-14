@@ -92,7 +92,8 @@ export default function QueryPage(){
             <Link href="/knowledge" style={{padding:'6px 14px',borderRadius:8,fontSize:13,color:'#8b90a8',textDecoration:'none'}}>Knowledge Base</Link>
             <Link href="/graph" style={{padding:'6px 14px',borderRadius:8,fontSize:13,color:'#8b90a8',textDecoration:'none'}}>Graph</Link>
             <span style={{padding:'6px 14px',borderRadius:8,fontSize:13,fontWeight:600,color:'#6c5ce7',background:'rgba(108,92,231,.1)'}}>Query</span>
-          </nav>
+          <Link href="/profile" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Profile</Link>
+            </nav>
         </div>
       </header>
 
