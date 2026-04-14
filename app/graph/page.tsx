@@ -20,6 +20,7 @@ export default function GraphView(){
   const [selected,setSelected]=useState<GNode|null>(null);
   const [colorBy,setColorBy]=useState<'type'|'source'>('source');
   const [hovered,setHovered]=useState<GNode|null>(null);
+  const [wikiTopic,setWikiTopic]=useState<string|null>(null);
   const fgRef=useRef<any>(null);
   const srcMap=useRef<Map<string,string>>(new Map());
   const [dims,setDims]=useState({w:800,h:600});
@@ -95,6 +96,21 @@ export default function GraphView(){
     ctx.stroke();
   },[selected]);
 
+  // When selection changes, figure out the most common tag and check if a wiki article exists
+  useEffect(()=>{
+    setWikiTopic(null);
+    if(!selected?.tags?.length)return;
+    const counts=new Map<string,number>();
+    selected.tags.forEach(t=>counts.set(t,(counts.get(t)||0)+1));
+    const topTag=[...counts.entries()].sort((a,b)=>b[1]-a[1])[0][0];
+    let cancelled=false;
+    fetch(`/api/wiki/check?topic=${encodeURIComponent(topTag)}`)
+      .then(r=>r.json())
+      .then(d=>{ if(!cancelled&&d.exists)setWikiTopic(topTag); })
+      .catch(()=>{});
+    return()=>{cancelled=true;};
+  },[selected]);
+
   const connEdges=selected?graphData.links.filter(l=>{
     const sid=typeof l.source==='string'?l.source:(l.source as any)?.id;
     const tid=typeof l.target==='string'?l.target:(l.target as any)?.id;
@@ -162,6 +178,7 @@ export default function GraphView(){
           <p style={{fontSize:14,lineHeight:1.7,color:'#e8eaf0',marginBottom:12}}>{selected.fullContent}</p>
           <div style={{fontSize:11,color:'#4e5370',marginBottom:8}}><span style={{fontFamily:"'JetBrains Mono',monospace"}}>Source:</span> {selected.sourceTitle}</div>
           {selected.tags?.length>0&&<div style={{display:'flex',flexWrap:'wrap' as const,gap:4,marginBottom:16}}>{selected.tags.map(t=><span key={t} style={{fontSize:10,padding:'2px 8px',borderRadius:4,background:'#1e2340',color:'#4e5370',fontFamily:"'JetBrains Mono',monospace"}}>#{t}</span>)}</div>}
+          {wikiTopic&&<Link href={`/wiki?topic=${encodeURIComponent(wikiTopic)}`} style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:8,fontSize:12,fontWeight:700,textDecoration:'none',background:'rgba(45,212,191,.1)',border:'1px solid rgba(45,212,191,.25)',color:'#2dd4bf',fontFamily:"'JetBrains Mono',monospace",marginBottom:16}}>📖 View in Wiki → {wikiTopic}</Link>}
           {connEdges.length>0&&<div>
             <div style={{fontSize:10,color:'#4e5370',fontFamily:"'JetBrains Mono',monospace",textTransform:'uppercase' as const,letterSpacing:'.1em',marginBottom:8}}>{connEdges.length} connection{connEdges.length>1?'s':''}</div>
             {connEdges.map(e=>{
