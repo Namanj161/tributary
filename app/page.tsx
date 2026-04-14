@@ -141,7 +141,8 @@ export default function Home() {
             <span style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#00e5a0', background: 'rgba(0,229,160,0.1)' }}>Intake</span>
             <Link href="/knowledge" style={{ padding: "6px 14px", borderRadius: 8, fontSize: 13, color: "#8b90a8", textDecoration: "none" }}>Knowledge Base</Link>
             <Link href="/graph" style={{ padding: "6px 14px", borderRadius: 8, fontSize: 13, color: "#8b90a8", textDecoration: "none" }}>Graph</Link>
-          </nav>
+          <Link href="/query" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Query</Link>
+            </nav>
         </div>
       </header>
 
