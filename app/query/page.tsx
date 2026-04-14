@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef } from 'react';
-import Link from 'next/link';
+import Nav from '@/components/Nav';
 
 const TC: Record<string,{bg:string;color:string;border:string}> = {
   framework:{bg:'rgba(108,92,231,.12)',color:'#a78bfa',border:'rgba(108,92,231,.2)'},
@@ -81,24 +81,7 @@ export default function QueryPage(){
   return(
     <div style={{minHeight:'100vh',background:'#06070b',fontFamily:"'DM Sans',sans-serif",color:'#e8eaf0'}}>
       <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'radial-gradient(ellipse at 50% 30%,rgba(108,92,231,.04) 0%,transparent 50%)',pointerEvents:'none'}}/>
-      <header style={{position:'fixed',top:0,left:0,right:0,zIndex:50,background:'rgba(6,7,11,.85)',backdropFilter:'blur(20px)',borderBottom:'1px solid #1c2035'}}>
-        <div style={{maxWidth:1100,margin:'0 auto',padding:'0 24px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-          <Link href="/" style={{display:'flex',alignItems:'center',gap:10,textDecoration:'none',color:'inherit'}}>
-            <div style={{width:28,height:28,borderRadius:8,background:'linear-gradient(135deg,#00e5a0,#6c5ce7)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,color:'#06070b',fontFamily:"'Syne',sans-serif"}}>T</div>
-            <span style={{fontSize:15,fontWeight:700,fontFamily:"'Syne',sans-serif"}}>TPIC</span>
-          </Link>
-          <nav style={{display:'flex',gap:4}}>
-            <Link href="/" style={{padding:'6px 14px',borderRadius:8,fontSize:13,color:'#8b90a8',textDecoration:'none'}}>Intake</Link>
-            <Link href="/knowledge" style={{padding:'6px 14px',borderRadius:8,fontSize:13,color:'#8b90a8',textDecoration:'none'}}>Knowledge Base</Link>
-            <Link href="/graph" style={{padding:'6px 14px',borderRadius:8,fontSize:13,color:'#8b90a8',textDecoration:'none'}}>Graph</Link>
-            <span style={{padding:'6px 14px',borderRadius:8,fontSize:13,fontWeight:600,color:'#6c5ce7',background:'rgba(108,92,231,.1)'}}>Query</span>
-          <Link href="/profile" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Profile</Link>
-            <Link href="/actions" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Actions</Link>
-            <Link href="/setup" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Capture</Link>
-            <Link href="/wiki" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Wiki</Link>
-            </nav>
-        </div>
-      </header>
+      <Nav />
 
       <main style={{maxWidth:720,margin:'0 auto',padding:'120px 24px 80px'}}>
         {/* Hero */}

@@ -1,13 +1,21 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { IntakeBrief, BulkBrief } from '@/types';
 import Brief from '@/components/Brief';
 import BulkBriefView from '@/components/BulkBrief';
-import Link from 'next/link';
+import Nav from '@/components/Nav';
 
 export default function Home() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#06070b' }} />}>
+      <HomeInner />
+    </Suspense>
+  );
+}
+
+function HomeInner() {
   const [mode, setMode] = useState<'single' | 'bulk' | 'upload'>('single');
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -140,25 +148,7 @@ export default function Home() {
         </div>
       )}
 
-      <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, background: 'rgba(6,7,11,0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid #1c2035' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, #00e5a0, #6c5ce7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#06070b', fontFamily: "'Syne', sans-serif" }}>T</div>
-            <span style={{ fontSize: 15, fontWeight: 700, fontFamily: "'Syne', sans-serif", letterSpacing: '0.02em' }}>TPIC</span>
-            <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: '#1e2340', color: '#4e5370', fontFamily: "'JetBrains Mono', monospace" }}>v1.1</span>
-          </div>
-          <nav style={{ display: 'flex', gap: 4 }}>
-            <span style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#00e5a0', background: 'rgba(0,229,160,0.1)' }}>Intake</span>
-            <Link href="/knowledge" style={{ padding: "6px 14px", borderRadius: 8, fontSize: 13, color: "#8b90a8", textDecoration: "none" }}>Knowledge Base</Link>
-            <Link href="/graph" style={{ padding: "6px 14px", borderRadius: 8, fontSize: 13, color: "#8b90a8", textDecoration: "none" }}>Graph</Link>
-          <Link href="/query" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Query</Link>
-            <Link href="/profile" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Profile</Link>
-            <Link href="/actions" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Actions</Link>
-            <Link href="/setup" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Capture</Link>
-            <Link href="/wiki" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Wiki</Link>
-            </nav>
-        </div>
-      </header>
+      <Nav />
 
       <main style={{ maxWidth: 720, margin: '0 auto', padding: '120px 24px 80px' }}>
         {!showResults && (
@@ -167,8 +157,8 @@ export default function Home() {
               <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: 42, fontWeight: 800, lineHeight: 1.1, marginBottom: 14, letterSpacing: '-0.02em' }}>
                 Feed it anything.<br /><span style={{ color: '#00e5a0' }}>Extract the substance.</span>
               </h1>
-              <p style={{ fontSize: 15, color: '#8b90a8', lineHeight: 1.65, maxWidth: 440 }}>
-                YouTube, tweets, articles, Notion pages, PDFs, docs, or raw text. TPIC deconstructs it into atomic knowledge units, discovers connections, and compounds it with everything you've consumed.
+              <p style={{ fontSize: 15, color: '#8b90a8', lineHeight: 1.65, maxWidth: 460 }}>
+                YouTube, tweets, articles, Notion pages, PDFs, docs, or raw text. TPIC deconstructs it into atomic knowledge units, discovers connections, and compounds it with everything you've already consumed.
               </p>
             </div>
 

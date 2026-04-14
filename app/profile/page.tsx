@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import Nav from '@/components/Nav';
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState({ role:'', company:'', projects:'', goals:'', challenges:'', raw_context:'' });
@@ -34,24 +34,7 @@ export default function ProfilePage() {
   return (
     <div style={{ minHeight: '100vh', background: '#06070b', fontFamily: "'DM Sans',sans-serif", color: '#e8eaf0' }}>
       <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'radial-gradient(ellipse at 30% 50%, rgba(245,166,35,0.04) 0%, transparent 50%)', pointerEvents: 'none' }} />
-      <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, background: 'rgba(6,7,11,.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid #1c2035' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit' }}>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg,#00e5a0,#6c5ce7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#06070b', fontFamily: "'Syne',sans-serif" }}>T</div>
-            <span style={{ fontSize: 15, fontWeight: 700, fontFamily: "'Syne',sans-serif" }}>TPIC</span>
-          </Link>
-          <nav style={{ display: 'flex', gap: 4 }}>
-            <Link href="/" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, color: '#8b90a8', textDecoration: 'none' }}>Intake</Link>
-            <Link href="/knowledge" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, color: '#8b90a8', textDecoration: 'none' }}>Knowledge Base</Link>
-            <Link href="/graph" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, color: '#8b90a8', textDecoration: 'none' }}>Graph</Link>
-            <Link href="/query" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, color: '#8b90a8', textDecoration: 'none' }}>Query</Link>
-            <span style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#f5a623', background: 'rgba(245,166,35,.1)' }}>Profile</span>
-          <Link href="/actions" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Actions</Link>
-            <Link href="/setup" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Capture</Link>
-            <Link href="/wiki" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Wiki</Link>
-            </nav>
-        </div>
-      </header>
+      <Nav />
 
       <main style={{ maxWidth: 640, margin: '0 auto', padding: '100px 24px 80px' }}>
         <div style={{ marginBottom: 40 }}>

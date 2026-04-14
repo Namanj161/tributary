@@ -1,8 +1,8 @@
 'use client';
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import Nav from '@/components/Nav';
 
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false });
 
@@ -138,22 +138,7 @@ function WikiPageInner() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#06070b', fontFamily: "'DM Sans',sans-serif", color: '#e8eaf0' }}>
-      <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, background: 'rgba(6,7,11,.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid #1c2035' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit' }}>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg,#00e5a0,#6c5ce7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#06070b', fontFamily: "'Syne',sans-serif" }}>T</div>
-            <span style={{ fontSize: 15, fontWeight: 700, fontFamily: "'Syne',sans-serif" }}>TPIC</span>
-          </Link>
-          <nav style={{ display: 'flex', gap: 4 }}>
-            <Link href="/" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, color: '#8b90a8', textDecoration: 'none' }}>Intake</Link>
-            <Link href="/knowledge" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, color: '#8b90a8', textDecoration: 'none' }}>Knowledge Base</Link>
-            <Link href="/graph" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, color: '#8b90a8', textDecoration: 'none' }}>Graph</Link>
-            <Link href="/query" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, color: '#8b90a8', textDecoration: 'none' }}>Query</Link>
-            <span style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#2dd4bf', background: 'rgba(45,212,191,.1)' }}>Wiki</span>
-            <Link href="/profile" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, color: '#8b90a8', textDecoration: 'none' }}>Profile</Link>
-          </nav>
-        </div>
-      </header>
+      <Nav />
 
       <main style={{ maxWidth: 800, margin: '0 auto', padding: '100px 24px 80px' }}>
         {missingTopic && !selectedArticle ? (
@@ -176,13 +161,28 @@ function WikiPageInner() {
                   Auto-compiled articles from your knowledge units. The more you feed TPIC, the richer these get.
                 </p>
               </div>
-              <button onClick={handleCompile} disabled={compiling} style={{
-                padding: '10px 24px', borderRadius: 10, fontSize: 13, fontWeight: 700, border: 'none',
-                cursor: compiling ? 'not-allowed' : 'pointer', flexShrink: 0,
-                fontFamily: "'Syne',sans-serif",
-                background: compiling ? '#1e2340' : 'linear-gradient(135deg,#2dd4bf,#00b894)',
-                color: compiling ? '#4e5370' : '#06070b',
-              }}>{compiling ? 'Compiling...' : '⟳ Compile Wiki'}</button>
+              <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
+                <button onClick={handleCompile} disabled={compiling} style={{
+                  padding: '10px 24px', borderRadius: 10, fontSize: 13, fontWeight: 700, border: 'none',
+                  cursor: compiling ? 'not-allowed' : 'pointer',
+                  fontFamily: "'Syne',sans-serif",
+                  background: compiling ? '#1e2340' : 'linear-gradient(135deg,#2dd4bf,#00b894)',
+                  color: compiling ? '#4e5370' : '#06070b',
+                }}>{compiling ? 'Compiling...' : '⟳ Compile Wiki'}</button>
+                {articles.length > 0 && (() => {
+                  const latest = articles.reduce((acc: any, a: any) => {
+                    if (!a.last_compiled) return acc;
+                    if (!acc) return a.last_compiled;
+                    return new Date(a.last_compiled) > new Date(acc) ? a.last_compiled : acc;
+                  }, null as string | null);
+                  if (!latest) return null;
+                  return (
+                    <span style={{ fontSize: 10, color: '#4e5370', fontFamily: "'JetBrains Mono',monospace" }}>
+                      Last compiled {new Date(latest).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  );
+                })()}
+              </div>
             </div>
 
             {compileResult && (

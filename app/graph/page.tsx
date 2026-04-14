@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import Nav from '@/components/Nav';
 
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false });
 
@@ -119,24 +120,7 @@ export default function GraphView(){
 
   return(
     <div style={{height:'100vh',background:'#06070b',fontFamily:"'DM Sans',sans-serif",color:'#e8eaf0',overflow:'hidden'}}>
-      <header style={{position:'fixed',top:0,left:0,right:0,zIndex:50,background:'rgba(6,7,11,.85)',backdropFilter:'blur(20px)',borderBottom:'1px solid #1c2035'}}>
-        <div style={{maxWidth:1400,margin:'0 auto',padding:'0 24px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-          <Link href="/" style={{display:'flex',alignItems:'center',gap:10,textDecoration:'none',color:'inherit'}}>
-            <div style={{width:28,height:28,borderRadius:8,background:'linear-gradient(135deg,#00e5a0,#6c5ce7)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,color:'#06070b',fontFamily:"'Syne',sans-serif"}}>T</div>
-            <span style={{fontSize:15,fontWeight:700,fontFamily:"'Syne',sans-serif"}}>TPIC</span>
-          </Link>
-          <nav style={{display:'flex',gap:4}}>
-            <Link href="/" style={{padding:'6px 14px',borderRadius:8,fontSize:13,color:'#8b90a8',textDecoration:'none'}}>Intake</Link>
-            <Link href="/knowledge" style={{padding:'6px 14px',borderRadius:8,fontSize:13,color:'#8b90a8',textDecoration:'none'}}>Knowledge Base</Link>
-            <span style={{padding:'6px 14px',borderRadius:8,fontSize:13,fontWeight:600,color:'#00e5a0',background:'rgba(0,229,160,.1)'}}>Graph</span>
-          <Link href="/query" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Query</Link>
-            <Link href="/profile" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Profile</Link>
-            <Link href="/actions" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Actions</Link>
-            <Link href="/setup" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Capture</Link>
-            <Link href="/wiki" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Wiki</Link>
-            </nav>
-        </div>
-      </header>
+      <Nav maxWidth={1400} />
 
       {/* Controls */}
       <div style={{position:'fixed',top:72,left:24,zIndex:40,display:'flex',flexDirection:'column' as const,gap:8}}>
