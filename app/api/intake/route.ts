@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { extractContent } from '@/lib/extractors';
 import { deconstructContent, discoverConnections } from '@/lib/claude';
 import { supabase } from '@/lib/supabase';
+import { compileWiki } from '@/lib/compiler';
 import { scoreRelevance } from '@/lib/relevance';
 
 export const maxDuration = 60;
