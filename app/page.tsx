@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { IntakeBrief, BulkBrief } from '@/types';
 import Brief from '@/components/Brief';
 import BulkBriefView from '@/components/BulkBrief';
@@ -18,6 +19,15 @@ export default function Home() {
   const [dragOver, setDragOver] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const prefill = searchParams.get('prefill');
+    if (prefill) {
+      setInput(decodeURIComponent(prefill));
+      setMode('single');
+    }
+  }, [searchParams]);
 
   async function handleSingleIntake() {
     if (!input.trim()) return;
@@ -144,6 +154,7 @@ export default function Home() {
           <Link href="/query" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Query</Link>
             <Link href="/profile" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Profile</Link>
             <Link href="/actions" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Actions</Link>
+            <Link href="/setup" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Capture</Link>
             </nav>
         </div>
       </header>

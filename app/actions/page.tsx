@@ -51,7 +51,8 @@ export default function ActionsPage() {
             <Link href="/query" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, color: '#8b90a8', textDecoration: 'none' }}>Query</Link>
             <span style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#ff6b6b', background: 'rgba(255,107,107,.1)' }}>Actions</span>
             <Link href="/profile" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, color: '#8b90a8', textDecoration: 'none' }}>Profile</Link>
-          </nav>
+          <Link href="/setup" style={{padding:"6px 14px",borderRadius:8,fontSize:13,color:"#8b90a8",textDecoration:"none"}}>Capture</Link>
+            </nav>
         </div>
       </header>
 
