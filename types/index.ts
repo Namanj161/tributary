@@ -1,7 +1,7 @@
-export type SourceType = 'youtube' | 'twitter_thread' | 'blog_post' | 'article' | 'raw_text' | 'notion_page';
+export type SourceType = 'youtube' | 'twitter_thread' | 'blog_post' | 'article' | 'raw_text' | 'notion_page' | 'pdf';
 
-export type KnowledgeUnitType = 
-  | 'framework' | 'tactic' | 'claim' | 'insight' | 'story' 
+export type KnowledgeUnitType =
+  | 'framework' | 'tactic' | 'claim' | 'insight' | 'story'
   | 'number' | 'question' | 'principle' | 'example' | 'warning';
 
 export type ConnectionType = 'reinforces' | 'contradicts' | 'extends' | 'contextualizes' | 'parallels';

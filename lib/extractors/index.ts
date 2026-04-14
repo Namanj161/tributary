@@ -1,11 +1,12 @@
 import { SourceType, ExtractionResult } from '@/types';
 import { extractYouTube } from './youtube';
 import { extractArticle } from './article';
+import { extractTwitter } from './twitter';
+import { extractNotion } from './notion';
 
 export function detectSourceType(input: string): { type: SourceType; isUrl: boolean } {
   const trimmed = input.trim();
 
-  // YouTube
   if (
     trimmed.includes('youtube.com/watch') ||
     trimmed.includes('youtu.be/') ||
@@ -14,20 +15,18 @@ export function detectSourceType(input: string): { type: SourceType; isUrl: bool
     return { type: 'youtube', isUrl: true };
   }
 
-  // Twitter/X
-  if (
-    trimmed.includes('twitter.com/') ||
-    trimmed.includes('x.com/')
-  ) {
+  if (trimmed.includes('twitter.com/') || trimmed.includes('x.com/')) {
     return { type: 'twitter_thread', isUrl: true };
   }
 
-  // General URL (blog/article)
+  if (trimmed.includes('notion.so/') || trimmed.includes('notion.site/')) {
+    return { type: 'notion_page', isUrl: true };
+  }
+
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
     return { type: 'blog_post', isUrl: true };
   }
 
-  // Raw text
   return { type: 'raw_text', isUrl: false };
 }
 
@@ -35,7 +34,6 @@ export async function extractContent(input: string): Promise<ExtractionResult> {
   const { type, isUrl } = detectSourceType(input);
 
   if (!isUrl) {
-    // Raw text — just pass it through
     return {
       type: 'raw_text',
       title: input.slice(0, 80).replace(/\n/g, ' ') + (input.length > 80 ? '...' : ''),
@@ -51,10 +49,10 @@ export async function extractContent(input: string): Promise<ExtractionResult> {
       return await extractYouTube(input);
 
     case 'twitter_thread':
-      // Twitter extraction is complex — for Phase 0, we'll ask for manual paste
-      throw new Error(
-        'Twitter/X thread extraction coming in Phase 1. For now, copy-paste the thread text directly.'
-      );
+      return await extractTwitter(input);
+
+    case 'notion_page':
+      return await extractNotion(input);
 
     case 'blog_post':
     case 'article':

@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { IntakeBrief, BulkBrief } from '@/types';
 import Brief from '@/components/Brief';
 import BulkBriefView from '@/components/BulkBrief';
 import Link from 'next/link';
 
 export default function Home() {
-  const [mode, setMode] = useState<'single' | 'bulk'>('single');
+  const [mode, setMode] = useState<'single' | 'bulk' | 'upload'>('single');
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
@@ -15,12 +15,13 @@ export default function Home() {
   const [bulkBrief, setBulkBrief] = useState<BulkBrief | null>(null);
   const [error, setError] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   async function handleSingleIntake() {
     if (!input.trim()) return;
-    setLoading(true);
-    setError('');
-    setBrief(null);
+    setLoading(true); setError(''); setBrief(null);
     setStatus('Extracting content...');
     try {
       setTimeout(() => setStatus('Deconstructing into knowledge units...'), 3000);
@@ -33,24 +34,16 @@ export default function Home() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Intake failed');
-      setBrief(data);
-      setStatus('');
-      setInput('');
-    } catch (err: any) {
-      setError(err.message);
-      setStatus('');
-    } finally {
-      setLoading(false);
-    }
+      setBrief(data); setStatus(''); setInput('');
+    } catch (err: any) { setError(err.message); setStatus(''); }
+    finally { setLoading(false); }
   }
 
   async function handleBulkIntake() {
     const lines = input.trim().split('\n').map(l => l.trim()).filter(Boolean);
     if (lines.length === 0) return;
     if (lines.length > 10) { setError('Maximum 10 items per bulk import'); return; }
-    setLoading(true);
-    setError('');
-    setBulkBrief(null);
+    setLoading(true); setError(''); setBulkBrief(null);
     setStatus(`Processing ${lines.length} sources...`);
     try {
       let count = 0;
@@ -67,44 +60,87 @@ export default function Home() {
       clearInterval(timer);
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Bulk intake failed');
-      setBulkBrief(data);
-      setStatus('');
-      setInput('');
-    } catch (err: any) {
-      setError(err.message);
-      setStatus('');
-    } finally {
-      setLoading(false);
-    }
+      setBulkBrief(data); setStatus(''); setInput('');
+    } catch (err: any) { setError(err.message); setStatus(''); }
+    finally { setLoading(false); }
+  }
+
+  async function handleFileUpload() {
+    if (!selectedFile) return;
+    setLoading(true); setError(''); setBrief(null);
+    setStatus(`Extracting text from ${selectedFile.name}...`);
+    try {
+      setTimeout(() => setStatus('Deconstructing into knowledge units...'), 3000);
+      setTimeout(() => setStatus('Discovering connections...'), 8000);
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      const response = await fetch('/api/upload', { method: 'POST', body: formData });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Upload failed');
+      setBrief(data); setStatus(''); setSelectedFile(null);
+    } catch (err: any) { setError(err.message); setStatus(''); }
+    finally { setLoading(false); }
   }
 
   function handleIntake() {
-    if (mode === 'single') handleSingleIntake();
-    else handleBulkIntake();
+    if (mode === 'upload') handleFileUpload();
+    else if (mode === 'bulk') handleBulkIntake();
+    else handleSingleIntake();
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'Enter' && !e.shiftKey && mode === 'single') { e.preventDefault(); handleIntake(); }
   }
 
-  function handleReset() { setBrief(null); setBulkBrief(null); setError(''); setStatus(''); }
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault(); setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) { setSelectedFile(file); setMode('upload'); }
+  }
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) setSelectedFile(file);
+  }
+
+  function handleReset() { setBrief(null); setBulkBrief(null); setError(''); setStatus(''); setSelectedFile(null); }
 
   const showResults = brief || bulkBrief;
+  const canSubmit = mode === 'upload' ? !!selectedFile : !!input.trim();
 
   return (
-    <div style={{ minHeight: '100vh', background: '#06070b', fontFamily: "'DM Sans', -apple-system, sans-serif", color: '#e8eaf0' }}>
+    <div style={{ minHeight: '100vh', background: '#06070b', fontFamily: "'DM Sans', -apple-system, sans-serif", color: '#e8eaf0' }}
+      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={handleDrop}>
+
       <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'radial-gradient(ellipse at 20% 30%, rgba(0,229,160,0.06) 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(108,92,231,0.04) 0%, transparent 40%)', pointerEvents: 'none' }} />
+
+      {/* Drag overlay */}
+      {dragOver && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100,
+          background: 'rgba(0,229,160,0.08)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          border: '3px dashed #00e5a0',
+        }}>
+          <div style={{ fontSize: 24, fontWeight: 700, color: '#00e5a0', fontFamily: "'Syne', sans-serif" }}>
+            Drop file to extract
+          </div>
+        </div>
+      )}
 
       <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, background: 'rgba(6,7,11,0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid #1c2035' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, #00e5a0, #6c5ce7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#06070b', fontFamily: "'Syne', sans-serif" }}>T</div>
             <span style={{ fontSize: 15, fontWeight: 700, fontFamily: "'Syne', sans-serif", letterSpacing: '0.02em' }}>TPIC</span>
-            <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: '#1e2340', color: '#4e5370', fontFamily: "'JetBrains Mono', monospace" }}>v1</span>
+            <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: '#1e2340', color: '#4e5370', fontFamily: "'JetBrains Mono', monospace" }}>v1.1</span>
           </div>
           <nav style={{ display: 'flex', gap: 4 }}>
             <span style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#00e5a0', background: 'rgba(0,229,160,0.1)' }}>Intake</span>
-            <Link href="/knowledge" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, color: '#8b90a8', textDecoration: 'none' }}>Knowledge Base</Link>
+            <Link href="/knowledge" style={{ padding: "6px 14px", borderRadius: 8, fontSize: 13, color: "#8b90a8", textDecoration: "none" }}>Knowledge Base</Link>
+            <Link href="/graph" style={{ padding: "6px 14px", borderRadius: 8, fontSize: 13, color: "#8b90a8", textDecoration: "none" }}>Graph</Link>
           </nav>
         </div>
       </header>
@@ -117,59 +153,113 @@ export default function Home() {
                 Feed it anything.<br /><span style={{ color: '#00e5a0' }}>Extract the substance.</span>
               </h1>
               <p style={{ fontSize: 15, color: '#8b90a8', lineHeight: 1.65, maxWidth: 440 }}>
-                Paste a YouTube video, blog post, or raw text. TPIC deconstructs it into atomic knowledge units, discovers connections, and compounds it with everything you've already consumed.
+                YouTube, tweets, articles, Notion pages, PDFs, docs, or raw text. TPIC deconstructs it into atomic knowledge units, discovers connections, and compounds it with everything you've consumed.
               </p>
             </div>
 
+            {/* Mode toggle */}
             <div style={{ display: 'flex', gap: 2, marginBottom: 16, padding: 3, borderRadius: 10, background: '#10131e', border: '1px solid #1c2035', width: 'fit-content' }}>
-              {(['single', 'bulk'] as const).map((m) => (
-                <button key={m} onClick={() => setMode(m)} style={{
+              {(['single', 'bulk', 'upload'] as const).map((m) => (
+                <button key={m} onClick={() => { setMode(m); setError(''); }} style={{
                   padding: '7px 18px', borderRadius: 8, fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer',
                   fontFamily: "'JetBrains Mono', monospace",
                   background: mode === m ? 'rgba(0,229,160,0.12)' : 'transparent',
                   color: mode === m ? '#00e5a0' : '#4e5370', transition: 'all 0.2s',
-                }}>{m === 'single' ? 'Single' : 'Bulk Import'}</button>
+                }}>{m === 'single' ? 'URL / Text' : m === 'bulk' ? 'Bulk Import' : 'Upload File'}</button>
               ))}
             </div>
 
-            <div style={{
-              borderRadius: 14, overflow: 'hidden', background: '#10131e',
-              border: `1px solid ${inputFocused ? '#00e5a0' : '#1c2035'}`,
-              boxShadow: inputFocused ? '0 0 0 1px #00e5a0, 0 0 40px rgba(0,229,160,0.08)' : 'none',
-              transition: 'all 0.2s ease',
-            }}>
-              <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown}
-                onFocus={() => setInputFocused(true)} onBlur={() => setInputFocused(false)}
-                placeholder={mode === 'single' ? 'https://youtube.com/watch?v=... or paste text directly' : 'Paste one URL per line (max 10)\nhttps://youtube.com/watch?v=...\nhttps://example.com/article'}
-                disabled={loading} rows={mode === 'single' ? 4 : 7}
-                style={{
-                  width: '100%', padding: 20, fontSize: mode === 'bulk' ? 13 : 15, resize: 'none',
-                  outline: 'none', background: 'transparent', color: '#e8eaf0',
-                  fontFamily: mode === 'bulk' ? "'JetBrains Mono', monospace" : "'DM Sans', sans-serif",
-                  lineHeight: 1.6, border: 'none',
-                }}
-              />
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px', borderTop: '1px solid #1c2035' }}>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                  {mode === 'single' ? (
-                    ['YouTube', 'Article', 'Raw Text'].map((t) => (
-                      <span key={t} style={{ fontSize: 10, padding: '3px 8px', borderRadius: 4, background: '#1e2340', color: '#4e5370', fontFamily: "'JetBrains Mono', monospace" }}>{t}</span>
-                    ))
+            {/* Input area — URL/Text or Bulk */}
+            {mode !== 'upload' && (
+              <div style={{
+                borderRadius: 14, overflow: 'hidden', background: '#10131e',
+                border: `1px solid ${inputFocused ? '#00e5a0' : '#1c2035'}`,
+                boxShadow: inputFocused ? '0 0 0 1px #00e5a0, 0 0 40px rgba(0,229,160,0.08)' : 'none',
+                transition: 'all 0.2s ease',
+              }}>
+                <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown}
+                  onFocus={() => setInputFocused(true)} onBlur={() => setInputFocused(false)}
+                  placeholder={mode === 'single'
+                    ? 'Paste a URL (YouTube, tweet, article, Notion) or type/paste any text...'
+                    : 'Paste one URL per line (max 10)\nhttps://youtube.com/watch?v=...\nhttps://x.com/user/status/...\nhttps://example.com/article'}
+                  disabled={loading} rows={mode === 'single' ? 5 : 7}
+                  style={{
+                    width: '100%', padding: 20, fontSize: mode === 'bulk' ? 13 : 15, resize: 'none',
+                    outline: 'none', background: 'transparent', color: '#e8eaf0',
+                    fontFamily: mode === 'bulk' ? "'JetBrains Mono', monospace" : "'DM Sans', sans-serif",
+                    lineHeight: 1.6, border: 'none',
+                  }}
+                />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px', borderTop: '1px solid #1c2035' }}>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' as const }}>
+                    {mode === 'single' ? (
+                      ['YouTube', 'Twitter/X', 'Article', 'Notion', 'Raw Text'].map((t) => (
+                        <span key={t} style={{ fontSize: 10, padding: '3px 8px', borderRadius: 4, background: '#1e2340', color: '#4e5370', fontFamily: "'JetBrains Mono', monospace" }}>{t}</span>
+                      ))
+                    ) : (
+                      <span style={{ fontSize: 11, color: '#4e5370', fontFamily: "'JetBrains Mono', monospace" }}>{input.trim().split('\n').filter(Boolean).length}/10 sources</span>
+                    )}
+                  </div>
+                  <button onClick={handleIntake} disabled={loading || !input.trim()} style={{
+                    padding: '8px 22px', borderRadius: 8, fontSize: 13, fontWeight: 700, border: 'none',
+                    cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
+                    fontFamily: "'Syne', sans-serif", letterSpacing: '0.02em',
+                    background: loading || !input.trim() ? '#1e2340' : 'linear-gradient(135deg, #00e5a0, #00b880)',
+                    color: loading || !input.trim() ? '#4e5370' : '#06070b', transition: 'all 0.2s ease',
+                  }}>{loading ? 'Processing...' : mode === 'single' ? 'Extract' : `Import ${input.trim().split('\n').filter(Boolean).length} Sources`}</button>
+                </div>
+              </div>
+            )}
+
+            {/* Upload area */}
+            {mode === 'upload' && (
+              <div>
+                <input type="file" ref={fileRef} onChange={handleFileSelect}
+                  accept=".pdf,.txt,.md,.csv,.json,.doc,.docx"
+                  style={{ display: 'none' }} />
+                <div
+                  onClick={() => fileRef.current?.click()}
+                  style={{
+                    borderRadius: 14, padding: 48, textAlign: 'center' as const,
+                    background: '#10131e', cursor: 'pointer',
+                    border: `2px dashed ${selectedFile ? '#00e5a0' : '#2a3050'}`,
+                    transition: 'all 0.2s',
+                  }}>
+                  {selectedFile ? (
+                    <div>
+                      <div style={{ fontSize: 36, marginBottom: 12 }}>📄</div>
+                      <p style={{ fontSize: 16, fontWeight: 600, color: '#e8eaf0', marginBottom: 4 }}>{selectedFile.name}</p>
+                      <p style={{ fontSize: 12, color: '#4e5370', fontFamily: "'JetBrains Mono', monospace" }}>
+                        {(selectedFile.size / 1024).toFixed(0)} KB · Click to change
+                      </p>
+                    </div>
                   ) : (
-                    <span style={{ fontSize: 11, color: '#4e5370', fontFamily: "'JetBrains Mono', monospace" }}>{input.trim().split('\n').filter(Boolean).length}/10 sources</span>
+                    <div>
+                      <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.5 }}>📂</div>
+                      <p style={{ fontSize: 15, color: '#8b90a8', marginBottom: 8 }}>Click to select or drag & drop</p>
+                      <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' as const }}>
+                        {['PDF', 'DOCX', 'DOC', 'TXT', 'MD', 'CSV', 'JSON'].map((t) => (
+                          <span key={t} style={{ fontSize: 10, padding: '3px 8px', borderRadius: 4, background: '#1e2340', color: '#4e5370', fontFamily: "'JetBrains Mono', monospace" }}>{t}</span>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
-                <button onClick={handleIntake} disabled={loading || !input.trim()} style={{
-                  padding: '8px 22px', borderRadius: 8, fontSize: 13, fontWeight: 700, border: 'none',
-                  cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
-                  fontFamily: "'Syne', sans-serif", letterSpacing: '0.02em',
-                  background: loading || !input.trim() ? '#1e2340' : 'linear-gradient(135deg, #00e5a0, #00b880)',
-                  color: loading || !input.trim() ? '#4e5370' : '#06070b', transition: 'all 0.2s ease',
-                }}>{loading ? 'Processing...' : mode === 'single' ? 'Extract' : `Import ${input.trim().split('\n').filter(Boolean).length} Sources`}</button>
+                {selectedFile && (
+                  <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+                    <button onClick={handleIntake} disabled={loading} style={{
+                      padding: '10px 28px', borderRadius: 8, fontSize: 14, fontWeight: 700, border: 'none',
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      fontFamily: "'Syne', sans-serif", letterSpacing: '0.02em',
+                      background: loading ? '#1e2340' : 'linear-gradient(135deg, #00e5a0, #00b880)',
+                      color: loading ? '#4e5370' : '#06070b', transition: 'all 0.2s ease',
+                    }}>{loading ? 'Processing...' : 'Extract from File'}</button>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
 
-            {error && <div style={{ marginTop: 20, padding: 16, borderRadius: 12, fontSize: 14, background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.15)', color: '#ff6b6b', lineHeight: 1.5 }}>{error}</div>}
+            {error && <div style={{ marginTop: 20, padding: 16, borderRadius: 12, fontSize: 14, background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.15)', color: '#ff6b6b', lineHeight: 1.5, whiteSpace: 'pre-line' as const }}>{error}</div>}
 
             {loading && (
               <div style={{ marginTop: 48 }}>
@@ -191,20 +281,24 @@ export default function Home() {
               <div style={{ marginTop: 64 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
                   <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#00e5a0' }} />
-                  <span style={{ fontSize: 10, color: '#4e5370', textTransform: 'uppercase' as const, letterSpacing: '0.12em', fontFamily: "'JetBrains Mono', monospace" }}>How it works</span>
+                  <span style={{ fontSize: 10, color: '#4e5370', textTransform: 'uppercase' as const, letterSpacing: '0.12em', fontFamily: "'JetBrains Mono', monospace" }}>Supported sources</span>
                   <div style={{ flex: 1, height: 1, background: '#1c2035' }} />
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
                   {[
-                    { step: '01', title: 'Extract', desc: 'Pull full substance from any URL or text', color: '#00e5a0' },
-                    { step: '02', title: 'Deconstruct', desc: 'Break into tagged atomic knowledge units', color: '#6c5ce7' },
-                    { step: '03', title: 'Connect', desc: 'Find links to your existing knowledge', color: '#f5a623' },
-                    { step: '04', title: 'Compound', desc: 'Intelligence grows with every source', color: '#2dd4bf' },
+                    { icon: '▶', title: 'YouTube', desc: 'Videos with captions', color: '#ff4444' },
+                    { icon: '𝕏', title: 'Twitter/X', desc: 'Tweets & threads', color: '#e8eaf0' },
+                    { icon: '◆', title: 'Articles', desc: 'Any blog or web page', color: '#00e5a0' },
+                    { icon: 'N', title: 'Notion', desc: 'Shared pages', color: '#e8eaf0' },
+                    { icon: '📄', title: 'PDF', desc: 'Documents & papers', color: '#ff6b6b' },
+                    { icon: '📝', title: 'DOCX', desc: 'Word documents', color: '#60a5fa' },
+                    { icon: '📋', title: 'Text Files', desc: 'TXT, MD, CSV, JSON', color: '#2dd4bf' },
+                    { icon: '✍️', title: 'Raw Text', desc: 'Paste anything', color: '#f5a623' },
                   ].map((item) => (
-                    <div key={item.step} style={{ padding: 18, borderRadius: 12, background: '#151929', border: '1px solid #1c2035' }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: item.color, fontFamily: "'JetBrains Mono', monospace" }}>{item.step}</span>
-                      <h3 style={{ fontSize: 15, fontWeight: 700, marginTop: 8, marginBottom: 5, fontFamily: "'Syne', sans-serif" }}>{item.title}</h3>
-                      <p style={{ fontSize: 11, color: '#4e5370', lineHeight: 1.5 }}>{item.desc}</p>
+                    <div key={item.title} style={{ padding: 16, borderRadius: 12, background: '#151929', border: '1px solid #1c2035' }}>
+                      <span style={{ fontSize: 18 }}>{item.icon}</span>
+                      <h3 style={{ fontSize: 13, fontWeight: 700, marginTop: 6, marginBottom: 3, fontFamily: "'Syne', sans-serif", color: item.color }}>{item.title}</h3>
+                      <p style={{ fontSize: 10, color: '#4e5370', lineHeight: 1.4 }}>{item.desc}</p>
                     </div>
                   ))}
                 </div>
